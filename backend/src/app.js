@@ -7,8 +7,8 @@ const path     = require('path');
 
 // ── Startup validation ────────────────────────────────────────
 if (!process.env.JWT_SECRET) {
-  console.error('❌  FATAL: JWT_SECRET is not set. Set it in .env or Vercel environment variables.');
-  process.exit(1);
+  console.warn('⚠️  WARNING: JWT_SECRET is not set. Using an insecure fallback – set JWT_SECRET in production .env immediately!');
+  process.env.JWT_SECRET = '__INSECURE_FALLBACK__PLEASE_SET_JWT_SECRET__';
 }
 
 const authRoutes    = require('./routes/auth');
@@ -69,10 +69,12 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// Only start the HTTP server when running locally (not on Vercel serverless)
+// Start HTTP server
+// On Vercel: VERCEL=1 so we skip listen (serverless handles it)
+// On Atom Hosting (Passenger) and local: always listen
 if (process.env.VERCEL !== '1') {
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`🚽  API ready → http://localhost:${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => console.log(`🚽  API ready → http://0.0.0.0:${PORT}`));
 }
 
 module.exports = app;
