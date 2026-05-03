@@ -9,7 +9,7 @@ import ReviewModal from '@/components/ReviewModal';
 import { toiletAPI } from '@/lib/api';
 import { geocode, reverseGeocode } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { MapPinIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -120,12 +120,13 @@ export default function HomePage() {
       <div className="flex flex-1 overflow-hidden" style={{ paddingTop: '64px' }}>
 
         {/* ── Sidebar ──────────────────────────────────────── */}
+        {/* Mobile: full-screen overlay drawer. Desktop: static left panel */}
         <aside className={`
-          fixed sm:relative inset-y-0 left-0 z-40
-          w-80 xl:w-96 flex flex-col bg-white border-r border-slate-100 shadow-xl sm:shadow-none
+          fixed sm:relative inset-0 sm:inset-auto z-40
+          w-full sm:w-80 xl:w-96 flex flex-col bg-white border-r border-slate-100 shadow-2xl sm:shadow-none
           transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}
-        `} style={{ top: 64 }}>
+        `} style={{ top: 64, bottom: 0 }}>
           <ToiletSidebar
             toilets={toilets}
             selected={selectedToilet}
@@ -135,12 +136,17 @@ export default function HomePage() {
             onSearch={handleSearch}
             searchValue={searchValue}
             setSearchValue={setSearchValue}
+            onClose={() => setSidebarOpen(false)}
           />
         </aside>
 
-        {/* Sidebar overlay (mobile) */}
+        {/* Sidebar overlay backdrop (mobile only) */}
         {sidebarOpen && (
-          <div className="fixed inset-0 z-30 bg-black/40 sm:hidden" onClick={() => setSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 z-30 bg-black/50 sm:hidden"
+            style={{ top: 64 }}
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
         {/* ── Map ──────────────────────────────────────────── */}
@@ -155,14 +161,16 @@ export default function HomePage() {
             pendingPin={pendingPin}
           />
 
-          {/* Mobile sidebar toggle */}
-          <button
-            className="absolute top-4 left-4 z-[999] sm:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl glass shadow text-sm font-medium"
-            onClick={() => setSidebarOpen(v => !v)}
-          >
-            <ChevronLeftIcon className={`h-4 w-4 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
-            รายการ ({toilets.length})
-          </button>
+          {/* Mobile sidebar toggle – only show when sidebar is closed */}
+          {!sidebarOpen && (
+            <button
+              className="absolute top-4 left-4 z-[999] sm:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl glass shadow text-sm font-medium"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <span>☰</span>
+              รายการ ({toilets.length})
+            </button>
+          )}
 
           {/* Cancel adding mode */}
           {isAddingMode && (

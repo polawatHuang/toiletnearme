@@ -5,6 +5,12 @@ const helmet   = require('helmet');
 const morgan   = require('morgan');
 const path     = require('path');
 
+// ── Startup validation ────────────────────────────────────────
+if (!process.env.JWT_SECRET) {
+  console.error('❌  FATAL: JWT_SECRET is not set. Set it in .env or Vercel environment variables.');
+  process.exit(1);
+}
+
 const authRoutes    = require('./routes/auth');
 const toiletRoutes  = require('./routes/toilets');
 const reviewRoutes  = require('./routes/reviews');
@@ -63,7 +69,10 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚽  API ready → http://localhost:${PORT}`));
+// Only start the HTTP server when running locally (not on Vercel serverless)
+if (process.env.VERCEL !== '1') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚽  API ready → http://localhost:${PORT}`));
+}
 
 module.exports = app;
