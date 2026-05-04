@@ -14,6 +14,7 @@ export default function ToiletSidebar({
   toilets, selected, loading,
   onSelect, onNearMe, onClose,
   userLat, userLng, onSearchSelectPlace,
+  searchValue, onQueryChange,
 }) {
   const [filters, setFilters] = useState({ free: false, wheelchair: false, topRated: false });
 
@@ -50,6 +51,8 @@ export default function ToiletSidebar({
         <SearchBox
           userLat={userLat}
           userLng={userLng}
+          value={searchValue}
+          onQueryChange={onQueryChange}
           onSelectToilet={t => { onSelect?.(t); }}
           onSelectPlace={onSearchSelectPlace}
         />

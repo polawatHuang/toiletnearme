@@ -152,6 +152,8 @@ export default function HomePage() {
             userLat={userLocation.lat}
             userLng={userLocation.lng}
             onSearchSelectPlace={handleSearchSelectPlace}
+            searchValue={searchValue}
+            onQueryChange={setSearchValue}
           />
         </aside>
 
@@ -208,9 +210,9 @@ export default function HomePage() {
             </button>
           )}
 
-          {/* Toilet detail panel */}
+          {/* Toilet detail panel — top-right */}
           {selectedToilet && (
-            <div className="absolute bottom-0 right-0 z-[500] w-full sm:w-96 max-h-[70vh] animate-slide-up overflow-hidden">
+            <div className="absolute top-4 right-4 z-[500] w-full sm:w-96 max-h-[calc(100%-2rem)] animate-slide-down overflow-hidden rounded-2xl shadow-2xl">
               <ToiletDetail
                 toilet={selectedToilet}
                 onClose={() => setSelectedToilet(null)}

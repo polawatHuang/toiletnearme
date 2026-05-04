@@ -38,8 +38,8 @@ function RatingBadge({ value }) {
   return <span className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-md ${cls}`}>{n.toFixed(1)}</span>;
 }
 
-export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPlace }) {
-  const [query,     setQuery]     = useState('');
+export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPlace, value, onQueryChange }) {
+  const [query,     setQuery]     = useState(value ?? '');
   const [open,      setOpen]      = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [toilets,   setToilets]   = useState([]);
@@ -47,9 +47,10 @@ export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPl
   const [recent,    setRecent]    = useState([]);
   const [activeIdx, setActiveIdx] = useState(-1);
 
-  const inputRef = useRef(null);
-  const wrapRef  = useRef(null);
-  const timerRef = useRef(null);
+  const inputRef    = useRef(null);
+  const wrapRef     = useRef(null);
+  const timerRef    = useRef(null);
+  const skipSyncRef = useRef(false); // prevent echo-loop
 
   /* load recent when dropdown opens */
   useEffect(() => { if (open) setRecent(getRecent()); }, [open]);
@@ -62,6 +63,24 @@ export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPl
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  /* sync when Navbar changes searchValue externally */
+  useEffect(() => {
+    if (value === undefined) return;
+    if (skipSyncRef.current) { skipSyncRef.current = false; return; }
+    setQuery(value);
+    setActiveIdx(-1);
+    if (value.trim().length >= 2) {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => doSearch(value.trim()), 320);
+      setOpen(true);
+    } else {
+      setToilets([]);
+      setPlaces([]);
+      if (!value) setOpen(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   const doSearch = useCallback(async q => {
     setLoading(true);
@@ -79,7 +98,9 @@ export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPl
 
   const handleChange = e => {
     const val = e.target.value;
+    skipSyncRef.current = true; // we're the source — don't re-sync from parent
     setQuery(val);
+    onQueryChange?.(val);       // keep Navbar in sync
     setActiveIdx(-1);
     setOpen(true);
     clearTimeout(timerRef.current);
@@ -95,7 +116,9 @@ export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPl
 
   const pickToilet = t => {
     saveRecent({ kind: 'toilet', label: t.name, sub: t.address, id: t.id, lat: t.lat, lng: t.lng });
+    skipSyncRef.current = true;
     setQuery(t.name);
+    onQueryChange?.(t.name);
     setOpen(false);
     setRecent(getRecent());
     onSelectToilet?.(t);
@@ -104,14 +127,18 @@ export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPl
   const pickPlace = p => {
     const label = p.display_name?.split(',')[0] ?? p.display_name;
     saveRecent({ kind: 'place', label, sub: p.display_name, lat: p.lat, lng: p.lng });
+    skipSyncRef.current = true;
     setQuery(label);
+    onQueryChange?.(label);
     setOpen(false);
     setRecent(getRecent());
     onSelectPlace?.({ lat: p.lat, lng: p.lng, label });
   };
 
   const pickRecent = r => {
+    skipSyncRef.current = true;
     setQuery(r.label);
+    onQueryChange?.(r.label);
     setOpen(false);
     if (r.kind === 'toilet') onSelectToilet?.({ id: r.id, name: r.label, lat: r.lat, lng: r.lng });
     else                     onSelectPlace?.({ lat: r.lat, lng: r.lng, label: r.label });
@@ -140,7 +167,9 @@ export default function SearchBox({ userLat, userLng, onSelectToilet, onSelectPl
   };
 
   const clearQuery = () => {
+    skipSyncRef.current = true;
     setQuery('');
+    onQueryChange?.('');
     setToilets([]);
     setPlaces([]);
     inputRef.current?.focus();

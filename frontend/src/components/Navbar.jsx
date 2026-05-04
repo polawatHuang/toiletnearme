@@ -43,8 +43,18 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
               value={searchValue}
               onChange={e => setSearchValue?.(e.target.value)}
               placeholder="ค้นหาสถานที่ เช่น รามคำแหง, อโศก…"
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-white/70 border border-slate-200 text-sm placeholder-slate-400 focus:ring-2 focus:ring-brand-400 focus:outline-none transition"
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-white/70 border border-slate-200 text-sm placeholder-slate-400 focus:ring-2 focus:ring-brand-400 focus:outline-none transition"
             />
+            {searchValue ? (
+              <button
+                type="button"
+                onClick={() => { setSearchValue?.(''); onSearch?.(''); }}
+                className="absolute right-2.5 p-0.5 text-slate-400 hover:text-slate-600 rounded-full transition"
+                aria-label="ล้างการค้นหา"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
         </form>
 
