@@ -210,17 +210,38 @@ export default function HomePage() {
             </button>
           )}
 
-          {/* Toilet detail panel — top-right */}
+          {/* Toilet detail panel
+               Mobile : fixed bottom sheet (slide up)
+               Desktop: absolute top-right card  (slide down) */}
           {selectedToilet && (
-            <div className="absolute top-4 right-4 z-[500] w-full sm:w-96 max-h-[calc(100%-2rem)] animate-slide-down overflow-hidden rounded-2xl shadow-2xl">
-              <ToiletDetail
-                toilet={selectedToilet}
-                onClose={() => setSelectedToilet(null)}
-                onReview={() => user ? setShowReviewModal(true) : (window.location.href = '/login')}
-                onUpdated={handleToiletUpdated}
-                onDeleted={() => handleToiletDeleted(selectedToilet.id)}
+            <>
+              {/* Mobile bottom sheet */}
+              <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[600] animate-slide-up">
+                <ToiletDetail
+                  toilet={selectedToilet}
+                  onClose={() => setSelectedToilet(null)}
+                  onReview={() => user ? setShowReviewModal(true) : (window.location.href = '/login')}
+                  onUpdated={handleToiletUpdated}
+                  onDeleted={() => handleToiletDeleted(selectedToilet.id)}
+                  variant="sheet"
+                />
+              </div>
+              {/* Mobile backdrop */}
+              <div
+                className="sm:hidden fixed inset-0 z-[599] bg-black/40"
+                onClick={() => setSelectedToilet(null)}
               />
-            </div>
+              {/* Desktop top-right panel */}
+              <div className="hidden sm:block absolute top-4 right-4 z-[500] w-96 max-h-[calc(100%-2rem)] animate-slide-down overflow-hidden rounded-2xl shadow-2xl">
+                <ToiletDetail
+                  toilet={selectedToilet}
+                  onClose={() => setSelectedToilet(null)}
+                  onReview={() => user ? setShowReviewModal(true) : (window.location.href = '/login')}
+                  onUpdated={handleToiletUpdated}
+                  onDeleted={() => handleToiletDeleted(selectedToilet.id)}
+                />
+              </div>
+            </>
           )}
         </main>
       </div>

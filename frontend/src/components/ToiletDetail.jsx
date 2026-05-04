@@ -10,10 +10,12 @@ import { fmtRating, ratingColor, ratingBg } from '@/lib/utils';
 import { toiletAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
-export default function ToiletDetail({ toilet, onClose, onReview, onUpdated, onDeleted }) {
+export default function ToiletDetail({ toilet, onClose, onReview, onUpdated, onDeleted, variant }) {
   const { user } = useAuth();
   const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const [deleting, setDeleting] = useState(false);
+
+  const isSheet = variant === 'sheet';
 
   const handleDelete = async () => {
     if (!confirm(`ลบ "${toilet.name}" ออกจากระบบ?`)) return;
@@ -23,9 +25,21 @@ export default function ToiletDetail({ toilet, onClose, onReview, onUpdated, onD
   };
 
   return (
-    <div className="glass rounded-t-3xl shadow-2xl border border-white/60 max-h-[70vh] flex flex-col">
+    <div className={`glass shadow-2xl border border-white/60 flex flex-col ${
+      isSheet
+        ? 'rounded-t-3xl max-h-[78vh]'
+        : 'rounded-2xl max-h-[calc(100vh-6rem)] overflow-hidden'
+    }`}>
       {/* Photo header */}
-      <div className="relative h-40 rounded-t-3xl overflow-hidden shrink-0">
+      <div className={`relative h-40 overflow-hidden shrink-0 ${
+        isSheet ? 'rounded-t-3xl' : 'rounded-t-2xl'
+      }`}>
+        {/* Drag handle — sheet only */}
+        {isSheet && (
+          <div className="absolute top-0 inset-x-0 flex justify-center pt-2.5 z-10 pointer-events-none">
+            <div className="w-10 h-1 rounded-full bg-white/60" />
+          </div>
+        )}
         {toilet.photo_url
           ? <img src={`${API}${toilet.photo_url}`} alt={toilet.name} className="w-full h-full object-cover" />
           : (
