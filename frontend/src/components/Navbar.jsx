@@ -6,7 +6,7 @@ import { Menu, Transition } from '@headlessui/react';
 import {
   MapPinIcon, MagnifyingGlassIcon, UserCircleIcon,
   ChevronDownIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon,
-  Bars3Icon, XMarkIcon,
+  Bars3Icon, XMarkIcon, ArrowRightIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,7 +15,7 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = () => { logout(); router.push('/'); };
+  const handleLogout = () => { logout(); router.push('/'); setMobileOpen(false); };
 
   const handleSearch = e => {
     e.preventDefault();
@@ -23,14 +23,14 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
   };
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 glass border-b border-white/40 shadow-sm">
+    <nav className="fixed top-0 inset-x-0 z-[1001] glass border-b border-white/40 shadow-sm">
       <div className="px-4 mx-auto flex h-16 items-center gap-3">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0 mr-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-md text-xl">🚽</span>
-          <span className="hidden sm:block font-extrabold text-xl tracking-tight bg-gradient-to-r from-brand-600 to-brand-800 bg-clip-text text-transparent">
-            ToiletMap
+          <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-brand-600 to-brand-800 bg-clip-text text-transparent">
+            แวะจุดขี้
           </span>
         </Link>
 
@@ -48,7 +48,7 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
           </div>
         </form>
 
-        {/* Add Toilet */}
+        {/* Desktop: Add Toilet button (logged-in only) */}
         {user && (
           <button
             onClick={onAddClick}
@@ -59,12 +59,12 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
           </button>
         )}
 
-        {/* Auth */}
+        {/* Desktop: Auth (logged-in dropdown) */}
         {user ? (
-          <Menu as="div" className="relative">
+          <Menu as="div" className="hidden sm:block relative">
             <Menu.Button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 transition">
               <UserCircleIcon className="h-7 w-7 text-brand-600" />
-              <span className="hidden sm:block text-sm font-medium max-w-[120px] truncate">{user.name}</span>
+              <span className="text-sm font-medium max-w-[120px] truncate">{user.name}</span>
               <ChevronDownIcon className="h-4 w-4 text-slate-500" />
             </Menu.Button>
             <Transition as={Fragment}
@@ -95,7 +95,8 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
             </Transition>
           </Menu>
         ) : (
-          <div className="flex items-center gap-2">
+          /* Desktop: login/register links */
+          <div className="hidden sm:flex items-center gap-2">
             <Link href="/login" className="px-3 py-2 text-sm font-medium text-slate-700 hover:text-brand-600 transition">
               เข้าสู่ระบบ
             </Link>
@@ -105,21 +106,83 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
           </div>
         )}
 
-        {/* Mobile menu toggle */}
-        <button className="sm:hidden ml-auto p-2 rounded-lg hover:bg-slate-100" onClick={() => setMobileOpen(v => !v)}>
+        {/* Mobile hamburger – always visible on mobile */}
+        <button
+          className="sm:hidden ml-auto p-2 rounded-lg hover:bg-slate-100 transition"
+          onClick={() => setMobileOpen(v => !v)}
+          aria-label="เมนู"
+        >
           {mobileOpen ? <XMarkIcon className="h-5 w-5" /> : <Bars3Icon className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile extra row */}
-      {mobileOpen && user && (
-        <div className="sm:hidden px-4 pb-3 border-t border-slate-100">
-          <button onClick={() => { onAddClick?.(); setMobileOpen(false); }}
-            className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold">
-            <MapPinIcon className="h-4 w-4" /> เพิ่มห้องน้ำ
-          </button>
+      {/* ── Mobile dropdown menu ────────────────────────────── */}
+      <Transition
+        show={mobileOpen}
+        as={Fragment}
+        enter="transition ease-out duration-200" enterFrom="opacity-0 -translate-y-2" enterTo="opacity-100 translate-y-0"
+        leave="transition ease-in duration-150"  leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 -translate-y-2"
+      >
+        <div className="sm:hidden glass border-t border-white/40 px-4 py-4 space-y-2 shadow-lg">
+          {user ? (
+            <>
+              {/* User info */}
+              <div className="flex items-center gap-3 px-1 pb-3 border-b border-slate-100">
+                <UserCircleIcon className="h-9 w-9 text-brand-500 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate">{user.name}</p>
+                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                </div>
+              </div>
+
+              {/* เพิ่มห้องน้ำ */}
+              <button
+                onClick={() => { onAddClick?.(); setMobileOpen(false); }}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold"
+              >
+                <MapPinIcon className="h-4 w-4" /> เพิ่มห้องน้ำ
+              </button>
+
+              {/* Admin */}
+              {user.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-50 text-slate-700 text-sm font-medium"
+                >
+                  <Cog6ToothIcon className="h-4 w-4" /> Admin Panel
+                </Link>
+              )}
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-semibold"
+              >
+                <ArrowRightOnRectangleIcon className="h-4 w-4" /> ออกจากระบบ
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Guest: login & register */}
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 text-slate-700 text-sm font-semibold"
+              >
+                เข้าสู่ระบบ <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold shadow"
+              >
+                สมัครสมาชิกฟรี
+              </Link>
+            </>
+          )}
         </div>
-      )}
+      </Transition>
     </nav>
   );
 }

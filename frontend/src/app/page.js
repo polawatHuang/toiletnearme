@@ -122,7 +122,7 @@ export default function HomePage() {
         {/* ── Sidebar ──────────────────────────────────────── */}
         {/* Mobile: full-screen overlay drawer. Desktop: static left panel */}
         <aside className={`
-          fixed sm:relative inset-0 sm:inset-auto z-40
+          fixed sm:relative inset-0 sm:inset-auto z-[1000]
           w-full sm:w-80 xl:w-96 flex flex-col bg-white border-r border-slate-100 shadow-2xl sm:shadow-none
           transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}
@@ -143,7 +143,7 @@ export default function HomePage() {
         {/* Sidebar overlay backdrop (mobile only) */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/50 sm:hidden"
+            className="fixed inset-0 z-[999] bg-black/50 sm:hidden"
             style={{ top: 64 }}
             onClick={() => setSidebarOpen(false)}
           />
