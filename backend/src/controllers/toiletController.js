@@ -200,4 +200,39 @@ const getStats = async (_req, res) => {
   }
 };
 
-module.exports = { getToilets, getToilet, createToilet, updateToilet, deleteToilet, updateStatus, getStats };
+// ── GET /api/toilets/suggest?q=&lat=&lng= ─────────────────────
+// Smart autocomplete: returns up to 6 matching toilets, ranked by
+// combined rating + proximity when coordinates are supplied.
+const searchSuggest = async (req, res) => {
+  const { q, lat, lng } = req.query;
+  if (!q || q.trim().length < 2) return res.json({ toilets: [] });
+  try {
+    const s = `%${q.trim()}%`;
+    const [rows] = await pool.query(
+      `SELECT id, name, address, avg_rating, review_count, lat, lng, has_fee, is_wheelchair_accessible
+       FROM toilets
+       WHERE status = 'active' AND (name LIKE ? OR address LIKE ? OR description LIKE ?)
+       ORDER BY avg_rating DESC, review_count DESC
+       LIMIT 6`,
+      [s, s, s]
+    );
+    if (lat && lng) {
+      const uLat = parseFloat(lat), uLng = parseFloat(lng);
+      rows.forEach(t => {
+        t.distance = Math.round(haversine(uLat, uLng, t.lat, t.lng) * 10) / 10;
+      });
+      // Score = rating weight − distance penalty
+      rows.sort((a, b) => {
+        const sa = (parseFloat(a.avg_rating) || 0) * 2 - (a.distance || 99);
+        const sb = (parseFloat(b.avg_rating) || 0) * 2 - (b.distance || 99);
+        return sb - sa;
+      });
+    }
+    res.json({ toilets: rows });
+  } catch (err) {
+    console.error('searchSuggest:', err);
+    res.status(500).json({ message: 'Search failed' });
+  }
+};
+
+module.exports = { getToilets, getToilet, createToilet, updateToilet, deleteToilet, updateStatus, getStats, searchSuggest };

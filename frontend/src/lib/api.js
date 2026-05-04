@@ -35,6 +35,7 @@ export const authAPI = {
 /* ── Toilets ───────────────────────────────────────────────── */
 export const toiletAPI = {
   list:         params  => API.get('/api/toilets',           { params }),
+  suggest:      params  => API.get('/api/toilets/suggest',   { params }),
   get:          id      => API.get(`/api/toilets/${id}`),
   create:       form    => API.post('/api/toilets',          form, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update:       (id, f) => API.put(`/api/toilets/${id}`,     f,    { headers: { 'Content-Type': 'multipart/form-data' } }),

@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import MapWrapper from '@/components/Map/MapWrapper';
 import ToiletSidebar from '@/components/ToiletSidebar';
@@ -10,30 +10,33 @@ import { toiletAPI } from '@/lib/api';
 import { geocode, reverseGeocode } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { MapPinIcon } from '@heroicons/react/24/outline';
+import Footer from '@/components/Footer';
 
 export default function HomePage() {
   const { user } = useAuth();
 
-  const [toilets,       setToilets]       = useState([]);
-  const [selectedToilet,setSelectedToilet]= useState(null);
+  const [toilets,        setToilets]       = useState([]);
+  const [selectedToilet, setSelectedToilet]= useState(null);
   const [loading,        setLoading]       = useState(false);
   const [flyTarget,      setFlyTarget]     = useState(null);
 
-  // Search
-  const [searchValue, setSearchValue] = useState('');
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  // Search (Navbar)
+  const [searchValue,    setSearchValue]   = useState('');
 
   // Add mode
-  const [isAddingMode, setIsAddingMode] = useState(false);
-  const [pendingPin,   setPendingPin]   = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [pendingAddress, setPendingAddress] = useState('');
+  const [isAddingMode,   setIsAddingMode]  = useState(false);
+  const [pendingPin,     setPendingPin]    = useState(null);
+  const [showAddModal,   setShowAddModal]  = useState(false);
+  const [pendingAddress, setPendingAddress]= useState('');
 
   // Review modal
   const [showReviewModal, setShowReviewModal] = useState(false);
 
   // Sidebar (mobile)
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // User location (set after Near Me)
+  const [userLocation, setUserLocation] = useState({ lat: null, lng: null });
 
   /* ── Load all active toilets ─────────────────────────────── */
   const loadToilets = useCallback(async (params = {}) => {
@@ -54,18 +57,15 @@ export default function HomePage() {
   const handleNearMe = () => {
     if (!navigator.geolocation) return alert('เบราว์เซอร์ไม่รองรับ geolocation');
     navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      setFlyTarget({ lat, lng });
+      const { latitude: lat, longitude: lng } = pos.coords;      setUserLocation({ lat, lng });      setFlyTarget({ lat, lng });
       loadToilets({ lat, lng, radius: 5 });
     }, () => alert('ไม่สามารถรับตำแหน่งได้ กรุณาอนุญาต location'));
   };
 
-  /* ── Search ──────────────────────────────────────────────── */
+  /* ── Search (Navbar) ────────────────────────────────────── */
   const handleSearch = async (query) => {
     if (!query.trim()) { loadToilets(); return; }
-    // First try name search against our API
     loadToilets({ search: query });
-    // Also geocode for map fly
     try {
       const results = await geocode(query);
       if (results.length) {
@@ -73,6 +73,20 @@ export default function HomePage() {
         loadToilets({ lat: results[0].lat, lng: results[0].lng, radius: 5, search: query });
       }
     } catch {}
+  };
+
+  /* ── SearchBox: select toilet ────────────────────────────── */
+  const handleSearchSelectToilet = t => {
+    setSelectedToilet(t);
+    setFlyTarget({ lat: t.lat, lng: t.lng });
+    setSidebarOpen(false);
+  };
+
+  /* ── SearchBox: select place ─────────────────────────────── */
+  const handleSearchSelectPlace = ({ lat, lng }) => {
+    setFlyTarget({ lat, lng });
+    loadToilets({ lat, lng, radius: 5 });
+    setSidebarOpen(false);
   };
 
   /* ── Map click (add mode) ────────────────────────────────── */
@@ -108,7 +122,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col" style={{ height: '100dvh' }}>
+    <div className="flex flex-col">
       <Navbar
         searchValue={searchValue}
         setSearchValue={setSearchValue}
@@ -116,27 +130,28 @@ export default function HomePage() {
         onAddClick={() => user ? setIsAddingMode(true) : (window.location.href = '/login')}
       />
 
-      {/* Main area below navbar */}
-      <div className="flex flex-1 overflow-hidden" style={{ paddingTop: '64px' }}>
+      {/* Main area below navbar — fills full viewport height so footer requires scroll */}
+      <div className="flex overflow-hidden" style={{ minHeight: 'calc(100dvh - 64px)', marginTop: '64px' }}>
 
         {/* ── Sidebar ──────────────────────────────────────── */}
         {/* Mobile: full-screen overlay drawer. Desktop: static left panel */}
         <aside className={`
           fixed sm:relative inset-0 sm:inset-auto z-[1000]
+          top-16 bottom-0 sm:top-auto sm:bottom-auto
           w-full sm:w-80 xl:w-96 flex flex-col bg-white border-r border-slate-100 shadow-2xl sm:shadow-none
           transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}
-        `} style={{ top: 64, bottom: 0 }}>
+        `}>
           <ToiletSidebar
             toilets={toilets}
             selected={selectedToilet}
             loading={loading}
             onSelect={t => { setSelectedToilet(t); setFlyTarget({ lat: t.lat, lng: t.lng }); setSidebarOpen(false); }}
             onNearMe={handleNearMe}
-            onSearch={handleSearch}
-            searchValue={searchValue}
-            setSearchValue={setSearchValue}
             onClose={() => setSidebarOpen(false)}
+            userLat={userLocation.lat}
+            userLng={userLocation.lng}
+            onSearchSelectPlace={handleSearchSelectPlace}
           />
         </aside>
 
@@ -230,6 +245,8 @@ export default function HomePage() {
           }}
         />
       )}
+
+      <Footer />
     </div>
   );
 }

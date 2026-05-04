@@ -1,9 +1,10 @@
 const router = require('express').Router();
-const { getToilets, getToilet, createToilet, updateToilet, deleteToilet, updateStatus, getStats } = require('../controllers/toiletController');
+const { getToilets, getToilet, createToilet, updateToilet, deleteToilet, updateStatus, getStats, searchSuggest } = require('../controllers/toiletController');
 const { authenticate, requireAdmin, optionalAuth } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 router.get('/stats',        authenticate, requireAdmin, getStats);
+router.get('/suggest',      searchSuggest);   // must be before /:id
 router.get('/',             optionalAuth, getToilets);
 router.get('/:id',          getToilet);
 router.post('/',            authenticate, upload.single('photo'), createToilet);
