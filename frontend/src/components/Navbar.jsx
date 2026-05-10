@@ -58,16 +58,14 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
           </div>
         </form>
 
-        {/* Desktop: Add Toilet button (logged-in only) */}
-        {user && (
-          <button
-            onClick={onAddClick}
-            className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold shadow hover:from-brand-600 hover:to-brand-700 transition"
-          >
-            <MapPinIcon className="h-4 w-4" />
-            เพิ่มห้องน้ำ
-          </button>
-        )}
+        {/* Desktop: Add Toilet button – always visible */}
+        <button
+          onClick={onAddClick}
+          className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold shadow hover:from-brand-600 hover:to-brand-700 active:scale-95 transition-all shrink-0"
+        >
+          <MapPinIcon className="h-4 w-4" />
+          เพิ่มห้องน้ำ
+        </button>
 
         {/* Desktop: Auth (logged-in dropdown) */}
         {user ? (
@@ -174,6 +172,14 @@ export default function Navbar({ onSearch, onAddClick, searchValue, setSearchVal
             </>
           ) : (
             <>
+              {/* Guest: Add toilet → redirect to login */}
+              <button
+                onClick={() => { onAddClick?.(); setMobileOpen(false); }}
+                className="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white text-sm font-semibold"
+              >
+                <MapPinIcon className="h-4 w-4" /> เพิ่มห้องน้ำ
+              </button>
+
               {/* Guest: login & register */}
               <Link
                 href="/login"

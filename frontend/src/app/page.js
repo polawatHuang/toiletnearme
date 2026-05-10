@@ -199,14 +199,14 @@ export default function HomePage() {
             </button>
           )}
 
-          {/* FAB */}
-          {!isAddingMode && user && (
+          {/* FAB – visible on all screen sizes, all users */}
+          {!isAddingMode && (
             <button
-              onClick={() => setIsAddingMode(true)}
-              className="absolute bottom-6 right-6 z-[999] flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold shadow-2xl hover:from-brand-600 hover:to-brand-700 transition animate-fade-in"
+              onClick={() => user ? setIsAddingMode(true) : (window.location.href = '/login')}
+              className="absolute bottom-6 right-4 sm:right-6 z-[999] flex items-center gap-2 px-4 sm:px-5 py-3 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold shadow-2xl hover:from-brand-600 hover:to-brand-700 active:scale-95 transition-all animate-fade-in text-sm sm:text-base"
             >
-              <MapPinIcon className="h-5 w-5" />
-              เพิ่มห้องน้ำ
+              <MapPinIcon className="h-5 w-5 shrink-0" />
+              <span>เพิ่มห้องน้ำ</span>
             </button>
           )}
 
