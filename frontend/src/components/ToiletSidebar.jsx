@@ -85,7 +85,7 @@ export default function ToiletSidebar({
       </div>
 
       {/* ── List ── */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 min-h-0">
+      <div className="flex-1 overflow-y-scroll px-3 py-3 space-y-1 min-h-0">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-40 gap-2 text-slate-400">
             <ArrowPathIcon className="h-6 w-6 animate-spin" />
